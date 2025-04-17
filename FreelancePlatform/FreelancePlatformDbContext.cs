@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FreelancePlatform.Models;
 
 namespace FreelancePlatform
@@ -17,14 +12,24 @@ namespace FreelancePlatform
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Chat> Chats { get; set; }
 
+        // Конструктор для передачі налаштувань
+        public FreelancePlatformDbContext(DbContextOptions<FreelancePlatformDbContext> options)
+            : base(options)
+        {
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string conn = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False";
-            optionsBuilder.UseSqlServer(conn);
+            if (!optionsBuilder.IsConfigured)
+            {
+                string conn = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=FreelancePlatformDB;Integrated Security=True;";
+                optionsBuilder.UseSqlServer(conn);
+            }
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Project: Customer та Executor
+            // Налаштування зв'язків між сутностями
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.Customer)
                 .WithMany(u => u.OwnedProjects)
@@ -37,56 +42,47 @@ namespace FreelancePlatform
                 .HasForeignKey(p => p.ExecutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Request: Freelancer
             modelBuilder.Entity<Request>()
                 .HasOne(r => r.Freelancer)
                 .WithMany(u => u.Requests)
                 .HasForeignKey(r => r.FreelancerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Request: Project
             modelBuilder.Entity<Request>()
                 .HasOne(r => r.Project)
                 .WithMany(p => p.Requests)
                 .HasForeignKey(r => r.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Transaction: User
             modelBuilder.Entity<Transaction>()
                 .HasOne(t => t.User)
                 .WithMany(u => u.Transactions)
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Feedback: Sender
             modelBuilder.Entity<Feedback>()
                 .HasOne(f => f.Sender)
                 .WithMany(u => u.SentFeedbacks)
                 .HasForeignKey(f => f.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Feedback: Recipient
             modelBuilder.Entity<Feedback>()
                 .HasOne(f => f.Recipient)
                 .WithMany(u => u.ReceivedFeedbacks)
                 .HasForeignKey(f => f.RecipientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Chat: Sender
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.Sender)
                 .WithMany(u => u.SentMessages)
                 .HasForeignKey(c => c.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Chat: Recipient
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.Recipient)
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(c => c.RecipientId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
-
     }
-    }
-
+}
